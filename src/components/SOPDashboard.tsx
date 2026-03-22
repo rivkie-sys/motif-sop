@@ -14,7 +14,10 @@ import {
   Save,
   X,
   Loader2,
+  Undo2,
 } from "lucide-react";
+
+const MAX_UNDO = 10;
 
 // --- Supabase helpers ---
 
@@ -74,6 +77,32 @@ export default function SOPDashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [undoStack, setUndoStack] = useState<SOP[][]>([]);
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  const pushUndo = useCallback(() => {
+    setUndoStack((prev) => {
+      const next = [...prev, JSON.parse(JSON.stringify(sops))];
+      if (next.length > MAX_UNDO) next.shift();
+      return next;
+    });
+  }, [sops]);
+
+  const undo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    setUndoStack((stack) => stack.slice(0, -1));
+    setSOPs(prev);
+    // Save all restored SOPs to database
+    prev.forEach((sop) => {
+      upsertSOP(sop).catch(console.error);
+    });
+    showToast("Undone");
+  }, [undoStack, showToast]);
 
   // Load data from Supabase on mount
   useEffect(() => {
@@ -99,11 +128,6 @@ export default function SOPDashboard() {
   }, []);
 
   const currentSOP = sops.find((s) => s.id === currentSOPId);
-
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  }, []);
 
   // Debounced save to Supabase whenever an SOP changes
   const saveSOP = useCallback(
@@ -142,6 +166,7 @@ export default function SOPDashboard() {
         },
       ],
     };
+    pushUndo();
     setSOPs((prev) => [...prev, newSOP]);
     setCurrentSOPId(newSOP.id);
     try {
@@ -162,7 +187,8 @@ export default function SOPDashboard() {
 
   const deleteSOP = async () => {
     if (!currentSOP) return;
-    if (!confirm(`Delete "${currentSOP.title}"? This cannot be undone.`)) return;
+    if (!confirm(`Delete "${currentSOP.title}"? You can undo this.`)) return;
+    pushUndo();
     const remaining = sops.filter((s) => s.id !== currentSOPId);
     setSOPs(remaining);
     setCurrentSOPId(remaining[0]?.id || "");
@@ -176,6 +202,7 @@ export default function SOPDashboard() {
   };
 
   const updateCurrentSOP = (updated: SOP) => {
+    pushUndo();
     setSOPs((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     saveSOP(updated);
   };
@@ -423,27 +450,43 @@ export default function SOPDashboard() {
           )}
         </div>
 
-        {/* Edit / Save button */}
-        <button
-          onClick={() => setEditMode(!editMode)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm ${
-            editMode
-              ? "bg-green-600 text-white hover:bg-green-700"
-              : "bg-white border border-gray-300 hover:bg-gray-50"
-          }`}
-        >
-          {editMode ? (
-            <>
-              <Save className="w-4 h-4" />
-              Done Editing
-            </>
-          ) : (
-            <>
-              <Pencil className="w-4 h-4" />
-              Edit this SOP
-            </>
+        {/* Edit / Save + Undo buttons */}
+        <div className="flex items-center gap-2">
+          {editMode && undoStack.length > 0 && (
+            <button
+              onClick={undo}
+              className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm text-gray-600"
+              title={`Undo (${undoStack.length} available)`}
+            >
+              <Undo2 className="w-4 h-4" />
+              Undo
+              <span className="text-xs text-gray-400">({undoStack.length})</span>
+            </button>
           )}
-        </button>
+          <button
+            onClick={() => {
+              if (editMode) setUndoStack([]);
+              setEditMode(!editMode);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+              editMode
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-white border border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            {editMode ? (
+              <>
+                <Save className="w-4 h-4" />
+                Done Editing
+              </>
+            ) : (
+              <>
+                <Pencil className="w-4 h-4" />
+                Edit this SOP
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* SOP Content */}
