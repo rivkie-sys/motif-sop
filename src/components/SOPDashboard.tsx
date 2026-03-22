@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { SOP, Stage, Section, Step, StepTag, STAGE_COLORS } from "@/types/sop";
 import { defaultSOPs } from "@/data/defaultData";
+import { supabase } from "@/lib/supabase";
 import { v4 as uuid } from "uuid";
 import StageAccordion from "./StageAccordion";
 import Toast from "./Toast";
@@ -12,26 +13,57 @@ import {
   Plus,
   Save,
   X,
+  Loader2,
 } from "lucide-react";
 
-const STORAGE_KEY = "motif-sop-data";
+// --- Supabase helpers ---
 
-function loadSOPs(): SOP[] {
-  if (typeof window === "undefined") return defaultSOPs;
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      return defaultSOPs;
-    }
+interface SOPRow {
+  id: string;
+  title: string;
+  data: { stages: Stage[] };
+  created_at: string;
+  updated_at: string;
+}
+
+function rowToSOP(row: SOPRow): SOP {
+  return { id: row.id, title: row.title, stages: row.data.stages };
+}
+
+async function fetchAllSOPs(): Promise<SOP[]> {
+  const { data, error } = await supabase
+    .from("sops")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  if (!data || data.length === 0) return [];
+  return data.map(rowToSOP);
+}
+
+async function upsertSOP(sop: SOP): Promise<void> {
+  const { error } = await supabase.from("sops").upsert({
+    id: sop.id,
+    title: sop.title,
+    data: { stages: sop.stages },
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
+async function deleteSopFromDB(id: string): Promise<void> {
+  const { error } = await supabase.from("sops").delete().eq("id", id);
+  if (error) throw error;
+}
+
+async function seedDefaults(): Promise<SOP[]> {
+  for (const sop of defaultSOPs) {
+    await upsertSOP(sop);
   }
   return defaultSOPs;
 }
 
-function saveSOPs(sops: SOP[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sops));
-}
+// --- Component ---
 
 export default function SOPDashboard() {
   const [sops, setSOPs] = useState<SOP[]>([]);
@@ -39,20 +71,32 @@ export default function SOPDashboard() {
   const [editMode, setEditMode] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load data on mount
+  // Load data from Supabase on mount
   useEffect(() => {
-    const loaded = loadSOPs();
-    setSOPs(loaded);
-    setCurrentSOPId(loaded[0]?.id || "");
-    setMounted(true);
+    async function load() {
+      try {
+        let data = await fetchAllSOPs();
+        if (data.length === 0) {
+          // First time: seed with default SOPs
+          data = await seedDefaults();
+        }
+        setSOPs(data);
+        setCurrentSOPId(data[0]?.id || "");
+      } catch (err) {
+        console.error("Failed to load SOPs:", err);
+        // Fallback to defaults if Supabase fails
+        setSOPs(defaultSOPs);
+        setCurrentSOPId(defaultSOPs[0]?.id || "");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, []);
-
-  // Save whenever sops change (after mount)
-  useEffect(() => {
-    if (mounted) saveSOPs(sops);
-  }, [sops, mounted]);
 
   const currentSOP = sops.find((s) => s.id === currentSOPId);
 
@@ -61,8 +105,27 @@ export default function SOPDashboard() {
     setTimeout(() => setToast(null), 2500);
   }, []);
 
+  // Debounced save to Supabase whenever an SOP changes
+  const saveSOP = useCallback(
+    (sop: SOP) => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
+        setSaving(true);
+        try {
+          await upsertSOP(sop);
+        } catch (err) {
+          console.error("Failed to save:", err);
+          showToast("Failed to save changes");
+        } finally {
+          setSaving(false);
+        }
+      }, 500);
+    },
+    [showToast]
+  );
+
   // --- SOP-level operations ---
-  const createNewSOP = () => {
+  const createNewSOP = async () => {
     const title = prompt("Enter a name for the new SOP:");
     if (!title?.trim()) return;
     const newSOP: SOP = {
@@ -74,39 +137,47 @@ export default function SOPDashboard() {
           title: "NEW STAGE",
           color: STAGE_COLORS[0].value,
           sections: [
-            {
-              id: uuid(),
-              title: "New Section",
-              steps: [],
-            },
+            { id: uuid(), title: "New Section", steps: [] },
           ],
         },
       ],
     };
     setSOPs((prev) => [...prev, newSOP]);
     setCurrentSOPId(newSOP.id);
-    showToast(`Created "${title.trim()}"`);
+    try {
+      await upsertSOP(newSOP);
+      showToast(`Created "${title.trim()}"`);
+    } catch {
+      showToast("Failed to create SOP");
+    }
   };
 
   const renameSOP = () => {
     if (!currentSOP) return;
     const title = prompt("Rename this SOP:", currentSOP.title);
     if (!title?.trim()) return;
-    updateCurrentSOP({ ...currentSOP, title: title.trim() });
+    const updated = { ...currentSOP, title: title.trim() };
+    updateCurrentSOP(updated);
   };
 
-  const deleteSOP = () => {
+  const deleteSOP = async () => {
     if (!currentSOP) return;
     if (!confirm(`Delete "${currentSOP.title}"? This cannot be undone.`)) return;
     const remaining = sops.filter((s) => s.id !== currentSOPId);
     setSOPs(remaining);
     setCurrentSOPId(remaining[0]?.id || "");
     setEditMode(false);
-    showToast("SOP deleted");
+    try {
+      await deleteSopFromDB(currentSOP.id);
+      showToast("SOP deleted");
+    } catch {
+      showToast("Failed to delete SOP");
+    }
   };
 
   const updateCurrentSOP = (updated: SOP) => {
     setSOPs((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    saveSOP(updated);
   };
 
   // --- Stage operations ---
@@ -282,10 +353,13 @@ export default function SOPDashboard() {
     });
   };
 
-  if (!mounted) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-400 text-lg">Loading...</div>
+        <div className="flex items-center gap-3 text-gray-400 text-lg">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          Loading SOPs...
+        </div>
       </div>
     );
   }
@@ -294,7 +368,10 @@ export default function SOPDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-black text-white py-4 px-6 shadow-lg">
-        <h1 className="text-xl font-semibold text-center tracking-wide">Motif Studio SOPs</h1>
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="text-xl font-semibold text-center tracking-wide">Motif Studio SOPs</h1>
+          {saving && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+        </div>
       </header>
 
       {/* Controls bar */}
