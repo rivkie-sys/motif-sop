@@ -63,7 +63,6 @@ export default function StageAccordion({
     setEditingTitle(false);
   };
 
-  // Determine if the stage color is dark for text contrast
   const isDark = (color: string) => {
     const hex = color.replace("#", "");
     const r = parseInt(hex.substring(0, 2), 16);
@@ -72,14 +71,14 @@ export default function StageAccordion({
     return r * 0.299 + g * 0.587 + b * 0.114 < 150;
   };
 
-  const textColor = isDark(stage.color) ? "text-white" : "text-gray-900";
+  const textColor = isDark(stage.color) ? "text-white" : "text-motif-charcoal";
 
   return (
-    <div className="rounded-xl overflow-hidden shadow-sm">
+    <div className="rounded-2xl overflow-hidden shadow-sm">
       {/* Stage header */}
       <button
         onClick={() => !editingTitle && setCollapsed(!collapsed)}
-        className={`w-full flex items-center justify-between px-5 py-3.5 font-bold text-lg tracking-wide transition-colors ${textColor}`}
+        className={`w-full flex items-center justify-between px-6 py-4 font-commuters text-sm uppercase tracking-[1.5px] transition-colors ${textColor}`}
         style={{ backgroundColor: stage.color }}
       >
         <div className="flex items-center gap-3">
@@ -88,7 +87,7 @@ export default function StageAccordion({
               {stageIndex > 0 && (
                 <button
                   onClick={() => onMoveStage("up")}
-                  className="p-1 rounded hover:bg-black/10 transition-colors"
+                  className="p-1 rounded-full hover:bg-black/10 transition-colors"
                   title="Move up"
                 >
                   <ArrowUp className="w-4 h-4" />
@@ -97,7 +96,7 @@ export default function StageAccordion({
               {stageIndex < totalStages - 1 && (
                 <button
                   onClick={() => onMoveStage("down")}
-                  className="p-1 rounded hover:bg-black/10 transition-colors"
+                  className="p-1 rounded-full hover:bg-black/10 transition-colors"
                   title="Move down"
                 >
                   <ArrowDown className="w-4 h-4" />
@@ -120,11 +119,11 @@ export default function StageAccordion({
                 }
               }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white/30 backdrop-blur-sm px-2 py-1 rounded text-lg font-bold uppercase border-none outline-none"
+              className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg font-commuters text-sm uppercase tracking-wider border-none outline-none"
               style={{ color: "inherit" }}
             />
           ) : (
-            <span>{stage.title}</span>
+            <span className="font-bold">{stage.title}</span>
           )}
 
           {editMode && !editingTitle && (
@@ -134,7 +133,7 @@ export default function StageAccordion({
                   setTitleDraft(stage.title);
                   setEditingTitle(true);
                 }}
-                className="p-1 rounded hover:bg-black/10 transition-colors"
+                className="p-1 rounded-full hover:bg-black/10 transition-colors"
                 title="Rename stage"
               >
                 <Pencil className="w-3.5 h-3.5" />
@@ -142,7 +141,7 @@ export default function StageAccordion({
               <div className="relative">
                 <button
                   onClick={() => setShowColorPicker(!showColorPicker)}
-                  className="p-1 rounded hover:bg-black/10 transition-colors"
+                  className="p-1 rounded-full hover:bg-black/10 transition-colors"
                   title="Change color"
                 >
                   <Palette className="w-3.5 h-3.5" />
@@ -150,7 +149,7 @@ export default function StageAccordion({
                 {showColorPicker && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowColorPicker(false)} />
-                    <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl z-20 p-2 grid grid-cols-5 gap-1">
+                    <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl z-20 p-3 grid grid-cols-5 gap-2">
                       {STAGE_COLORS.map((c) => (
                         <button
                           key={c.value}
@@ -158,10 +157,11 @@ export default function StageAccordion({
                             onUpdateStage({ ...stage, color: c.value });
                             setShowColorPicker(false);
                           }}
-                          className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
+                          className="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110"
                           style={{
                             backgroundColor: c.value,
-                            borderColor: stage.color === c.value ? "#333" : "transparent",
+                            borderColor: stage.color === c.value ? "#fff" : "transparent",
+                            boxShadow: stage.color === c.value ? "0 0 0 2px #333" : "none",
                           }}
                           title={c.name}
                         />
@@ -172,7 +172,7 @@ export default function StageAccordion({
               </div>
               <button
                 onClick={onDeleteStage}
-                className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                className="p-1 rounded-full hover:bg-red-500/20 transition-colors"
                 title="Delete stage"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -186,8 +186,8 @@ export default function StageAccordion({
 
       {/* Stage content */}
       {!collapsed && (
-        <div className="bg-white border-x border-b border-gray-200 rounded-b-xl">
-          <div className="p-4 space-y-4">
+        <div className="bg-white border-x border-b border-motif-medgray rounded-b-2xl">
+          <div className="p-5 space-y-4">
             {stage.sections.map((section, secIdx) => (
               <SectionCard
                 key={section.id}
@@ -210,9 +210,9 @@ export default function StageAccordion({
             {editMode && (
               <button
                 onClick={onAddSection}
-                className="w-full py-2.5 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 hover:border-green-400 hover:text-green-600 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                className="w-full py-2.5 border-2 border-dashed border-motif-medgray rounded-xl text-motif-gold hover:border-motif-red hover:text-motif-red transition-colors flex items-center justify-center gap-2 font-commuters text-[11px] uppercase tracking-wider"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 Add Section
               </button>
             )}

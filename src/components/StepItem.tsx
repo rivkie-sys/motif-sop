@@ -14,7 +14,6 @@ import {
   List,
   FileText,
   Check,
-  X,
   ExternalLink,
 } from "lucide-react";
 
@@ -119,7 +118,7 @@ export default function StepItem({
     <div className="relative group">
       <div className="flex gap-3">
         {/* Step number */}
-        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 mt-0.5">
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-motif-warmgray flex items-center justify-center text-sm font-medium text-motif-darkgray mt-0.5 border border-motif-medgray">
           {stepNum}
         </div>
 
@@ -128,7 +127,7 @@ export default function StepItem({
           {/* Tag */}
           <div className="flex items-center gap-2 mb-1">
             <span
-              className={`inline-block px-2 py-0.5 text-xs font-bold rounded ${tag.bg} ${tag.text}`}
+              className={`inline-block px-2.5 py-0.5 font-commuters text-[10px] uppercase tracking-wider rounded ${tag.bg} ${tag.text}`}
             >
               {tag.label}
             </span>
@@ -136,7 +135,7 @@ export default function StepItem({
               <div className="relative">
                 <button
                   onClick={() => setShowTagPicker(!showTagPicker)}
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
+                  className="text-motif-gold hover:text-motif-red transition-colors"
                   title="Change tag"
                 >
                   <Pencil className="w-3 h-3" />
@@ -144,7 +143,7 @@ export default function StepItem({
                 {showTagPicker && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowTagPicker(false)} />
-                    <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl z-20 py-1 min-w-[180px] border border-gray-200">
+                    <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl z-20 py-1 min-w-[200px] border border-motif-medgray">
                       {TAG_OPTIONS.map((t) => (
                         <button
                           key={t}
@@ -152,14 +151,16 @@ export default function StepItem({
                             onUpdate({ ...step, tag: t });
                             setShowTagPicker(false);
                           }}
-                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 flex items-center gap-2 ${
-                            step.tag === t ? "bg-gray-50 font-medium" : ""
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-motif-warmgray flex items-center gap-2.5 transition-colors ${
+                            step.tag === t ? "bg-motif-warmgray font-medium" : ""
                           }`}
                         >
                           <span
-                            className={`inline-block w-3 h-3 rounded ${TAG_CONFIG[t].bg}`}
+                            className={`inline-block w-3 h-3 rounded-sm ${TAG_CONFIG[t].bg}`}
                           />
-                          {TAG_CONFIG[t].label}
+                          <span className="font-commuters text-[10px] uppercase tracking-wider">
+                            {TAG_CONFIG[t].label}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -184,13 +185,13 @@ export default function StepItem({
                     setEditingTitle(false);
                   }
                 }}
-                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm outline-none focus:border-blue-400"
+                className="flex-1 px-3 py-1.5 bg-motif-warmgray border-b border-motif-darkgray text-sm outline-none focus:border-motif-red rounded-none"
               />
             </div>
           ) : (
             <p
-              className={`text-sm text-gray-800 leading-relaxed ${
-                editMode ? "cursor-pointer hover:bg-blue-50 rounded px-1 -mx-1 transition-colors" : ""
+              className={`text-sm text-motif-darkgray leading-relaxed ${
+                editMode ? "cursor-pointer hover:bg-motif-warmgray/50 rounded px-1 -mx-1 transition-colors" : ""
               }`}
               onClick={() => {
                 if (editMode) {
@@ -209,37 +210,37 @@ export default function StepItem({
               href={step.link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 bg-gray-100 rounded-md text-xs text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 bg-motif-warmgray rounded-pill text-xs text-motif-darkgray hover:bg-motif-medgray transition-colors"
             >
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3 text-motif-gold" />
               Link: {step.link.text}
             </a>
           )}
 
           {editingLink && (
-            <div className="mt-2 space-y-2 p-3 bg-gray-50 rounded-lg">
+            <div className="mt-2 space-y-2 p-4 bg-motif-warmgray rounded-xl">
               <input
                 value={linkTextDraft}
                 onChange={(e) => setLinkTextDraft(e.target.value)}
                 placeholder="Link text"
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400"
+                className="w-full px-3 py-2 bg-white border-b border-motif-darkgray rounded-none text-sm outline-none focus:border-motif-red"
               />
               <input
                 value={linkUrlDraft}
                 onChange={(e) => setLinkUrlDraft(e.target.value)}
                 placeholder="URL (https://...)"
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400"
+                className="w-full px-3 py-2 bg-white border-b border-motif-darkgray rounded-none text-sm outline-none focus:border-motif-red"
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-1">
                 <button
                   onClick={saveLink}
-                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                  className="px-4 py-1.5 bg-motif-red text-white font-commuters text-[10px] uppercase tracking-wider rounded-pill hover:bg-motif-red/90"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setEditingLink(false)}
-                  className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                  className="px-4 py-1.5 bg-white text-motif-darkgray font-commuters text-[10px] uppercase tracking-wider rounded-pill border border-motif-medgray hover:bg-motif-medgray/30"
                 >
                   Cancel
                 </button>
@@ -249,10 +250,10 @@ export default function StepItem({
 
           {/* Details (numbered sub-items) */}
           {step.details && step.details.length > 0 && !editingDetails && (
-            <ol className="mt-2 ml-4 space-y-1.5">
+            <ol className="mt-2.5 ml-4 space-y-1.5">
               {step.details.map((detail, idx) => (
-                <li key={idx} className="text-sm text-gray-700 flex gap-2">
-                  <span className="text-gray-400 font-medium flex-shrink-0">{idx + 1}.</span>
+                <li key={idx} className="text-sm text-motif-darkgray flex gap-2">
+                  <span className="text-motif-gold font-medium flex-shrink-0">{idx + 1}.</span>
                   <span>{detail}</span>
                 </li>
               ))}
@@ -260,24 +261,24 @@ export default function StepItem({
           )}
 
           {editingDetails && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500 mb-1">One item per line:</p>
+            <div className="mt-2 p-4 bg-motif-warmgray rounded-xl">
+              <p className="font-commuters text-[10px] uppercase tracking-wider text-motif-gold mb-2">One item per line:</p>
               <textarea
                 value={detailsDraft}
                 onChange={(e) => setDetailsDraft(e.target.value)}
                 rows={5}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400 resize-y"
+                className="w-full px-3 py-2 bg-white border-b border-motif-darkgray rounded-none text-sm outline-none focus:border-motif-red resize-y"
               />
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={saveDetails}
-                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                  className="px-4 py-1.5 bg-motif-red text-white font-commuters text-[10px] uppercase tracking-wider rounded-pill hover:bg-motif-red/90"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setEditingDetails(false)}
-                  className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                  className="px-4 py-1.5 bg-white text-motif-darkgray font-commuters text-[10px] uppercase tracking-wider rounded-pill border border-motif-medgray hover:bg-motif-medgray/30"
                 >
                   Cancel
                 </button>
@@ -286,14 +287,14 @@ export default function StepItem({
           )}
 
           {/* Action buttons row */}
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
             {/* Copy button */}
             {step.copyableText && (
               <button
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-motif-medgray rounded-pill text-xs text-motif-darkgray hover:border-motif-gold transition-colors"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-motif-green" /> : <Copy className="w-3.5 h-3.5 text-motif-gold" />}
                 {step.copyLabel || "Copy Email Text"}
               </button>
             )}
@@ -302,10 +303,10 @@ export default function StepItem({
             {step.copyableText && (
               <button
                 onClick={() => setViewTextOpen(!viewTextOpen)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-motif-medgray rounded-pill text-xs text-motif-darkgray hover:border-motif-gold transition-colors"
               >
                 View Text
-                {viewTextOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {viewTextOpen ? <ChevronUp className="w-3.5 h-3.5 text-motif-gold" /> : <ChevronDown className="w-3.5 h-3.5 text-motif-gold" />}
               </button>
             )}
 
@@ -319,7 +320,7 @@ export default function StepItem({
                       setLinkUrlDraft("");
                       setEditingLink(true);
                     }}
-                    className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+                    className="inline-flex items-center gap-1 font-commuters text-[10px] uppercase tracking-wider text-motif-gold hover:text-motif-red transition-colors"
                   >
                     <LinkIcon className="w-3.5 h-3.5" />
                     Add Link
@@ -332,7 +333,7 @@ export default function StepItem({
                       setLinkUrlDraft(step.link?.url || "");
                       setEditingLink(true);
                     }}
-                    className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+                    className="inline-flex items-center gap-1 font-commuters text-[10px] uppercase tracking-wider text-motif-gold hover:text-motif-red transition-colors"
                   >
                     <LinkIcon className="w-3.5 h-3.5" />
                     Edit Link
@@ -344,7 +345,7 @@ export default function StepItem({
                       setDetailsDraft(step.details?.join("\n") || "");
                       setEditingDetails(true);
                     }}
-                    className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+                    className="inline-flex items-center gap-1 font-commuters text-[10px] uppercase tracking-wider text-motif-gold hover:text-motif-red transition-colors"
                   >
                     <List className="w-3.5 h-3.5" />
                     {step.details ? "Edit Details" : "Add Details"}
@@ -357,7 +358,7 @@ export default function StepItem({
                       setCopyLabelDraft(step.copyLabel || "Copy Email Text");
                       setEditingCopyText(true);
                     }}
-                    className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+                    className="inline-flex items-center gap-1 font-commuters text-[10px] uppercase tracking-wider text-motif-gold hover:text-motif-red transition-colors"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     {step.copyableText ? "Edit Script" : "Add Script"}
@@ -369,8 +370,8 @@ export default function StepItem({
 
           {/* View Text expanded */}
           {viewTextOpen && step.copyableText && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
+            <div className="mt-3 p-4 bg-motif-warmgray rounded-xl border border-motif-medgray">
+              <pre className="text-sm text-motif-darkgray whitespace-pre-wrap font-basis leading-relaxed">
                 {step.copyableText}
               </pre>
             </div>
@@ -378,30 +379,30 @@ export default function StepItem({
 
           {/* Edit copyable text */}
           {editingCopyText && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+            <div className="mt-3 p-4 bg-motif-warmgray rounded-xl space-y-2">
               <input
                 value={copyLabelDraft}
                 onChange={(e) => setCopyLabelDraft(e.target.value)}
                 placeholder="Button label (e.g., Copy Email Text)"
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400"
+                className="w-full px-3 py-2 bg-white border-b border-motif-darkgray rounded-none text-sm outline-none focus:border-motif-red"
               />
               <textarea
                 value={copyTextDraft}
                 onChange={(e) => setCopyTextDraft(e.target.value)}
                 rows={6}
                 placeholder="Enter the email script or template text..."
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400 resize-y"
+                className="w-full px-3 py-2 bg-white border-b border-motif-darkgray rounded-none text-sm outline-none focus:border-motif-red resize-y"
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-1">
                 <button
                   onClick={saveCopyText}
-                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                  className="px-4 py-1.5 bg-motif-red text-white font-commuters text-[10px] uppercase tracking-wider rounded-pill hover:bg-motif-red/90"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setEditingCopyText(false)}
-                  className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                  className="px-4 py-1.5 bg-white text-motif-darkgray font-commuters text-[10px] uppercase tracking-wider rounded-pill border border-motif-medgray hover:bg-motif-medgray/30"
                 >
                   Cancel
                 </button>
@@ -416,7 +417,7 @@ export default function StepItem({
             {stepIndex > 0 && (
               <button
                 onClick={() => onMove("up")}
-                className="p-1 rounded hover:bg-gray-200 text-gray-400 transition-colors"
+                className="p-1 rounded-full hover:bg-motif-warmgray text-motif-gold transition-colors"
                 title="Move up"
               >
                 <ArrowUp className="w-3.5 h-3.5" />
@@ -425,7 +426,7 @@ export default function StepItem({
             {stepIndex < totalSteps - 1 && (
               <button
                 onClick={() => onMove("down")}
-                className="p-1 rounded hover:bg-gray-200 text-gray-400 transition-colors"
+                className="p-1 rounded-full hover:bg-motif-warmgray text-motif-gold transition-colors"
                 title="Move down"
               >
                 <ArrowDown className="w-3.5 h-3.5" />
@@ -433,7 +434,7 @@ export default function StepItem({
             )}
             <button
               onClick={onDelete}
-              className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
+              className="p-1 rounded-full hover:bg-motif-pink/30 text-motif-gold hover:text-motif-red transition-colors"
               title="Delete step"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -443,7 +444,7 @@ export default function StepItem({
       </div>
 
       {/* Separator line */}
-      {stepIndex < totalSteps - 1 && <div className="border-b border-gray-100 mt-3 ml-12" />}
+      {stepIndex < totalSteps - 1 && <div className="border-b border-motif-medgray/50 mt-3 ml-12" />}
     </div>
   );
 }
